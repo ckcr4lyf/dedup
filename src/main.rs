@@ -1,6 +1,15 @@
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+struct Args {
+   /// Directory to look through
+   target_directory: String,
+}
+
 fn main() {
-    // TODO: Take in folder path as arg
-    let paths = std::fs::read_dir("./ep/").unwrap();
+
+    let args = Args::parse();
+    let paths = std::fs::read_dir(args.target_directory).unwrap();
 
     for path in paths {
         if let Ok(p) = path {
