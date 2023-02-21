@@ -7,3 +7,17 @@ Images have mixed dating information, some EXIF, some filename etc. The preceden
 ## Third Party Libraries
 
 This project uses [exif-rs](https://github.com/kamadak/exif-rs). It's not obvious if there is any license associated with it, so just including this note.
+
+## Running
+
+Download `dedup.exe` , and then run it in a terminal using:
+
+```
+dedup.exe <path to folder to look into>
+```
+
+Example:
+
+```
+dedup.exe C:\Users\user\Pictures
+```
