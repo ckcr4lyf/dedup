@@ -13,8 +13,8 @@ Download `dedup.exe` , and then run it in a terminal using:
 dedup.exe <path to folder to look into>
 ```
 
-Example:
+If the folder name has spaces, you can use quotes. Example:
 
 ```
-dedup.exe C:\Users\user\Pictures
+dedup.exe "C:\Users\user\Pictures\Cool Folder Name"
 ```
