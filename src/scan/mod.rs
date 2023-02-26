@@ -22,7 +22,9 @@ const VALID_EXTENSIONS: [&str; 2] = ["jpg", "png"];
 
 pub fn scan_date(file_path: &std::path::Path) {
     if let Some(ext) = file_path.extension() {
-        if VALID_EXTENSIONS.contains(&ext.to_str().unwrap()) == false {
+        let lcase = ext.to_ascii_lowercase();
+        let l2 = lcase.to_str().unwrap();
+        if VALID_EXTENSIONS.contains(&l2) == false {
             // Skip invalid extension
             return;
         }
