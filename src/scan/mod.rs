@@ -18,7 +18,19 @@ pub fn scan_folder(folder_name: &std::ffi::OsStr) {
     }
 }
 
+const VALID_EXTENSIONS: [&str; 2] = ["jpg", "png"];
+
 pub fn scan_date(file_path: &std::path::Path) {
+    if let Some(ext) = file_path.extension() {
+        if VALID_EXTENSIONS.contains(&ext.to_str().unwrap()) == false {
+            // Skip invalid extension
+            return;
+        }
+    } else {
+        println!("Could not get extension for file {:?}", file_path);
+        return;
+    }
+
     // Try and open the file
     if let Ok(file) = std::fs::File::open(file_path) {
         let mut bufreader = std::io::BufReader::new(&file);
@@ -49,6 +61,10 @@ pub fn scan_date(file_path: &std::path::Path) {
             let set = regex::RegexSet::new(&[
                 r"^IMG-(\d{8})-",
                 r"^signal-(\d{4})-(\d{2})-(\d{2})",
+                r"^(\d{4})-(\d{2})-(\d{2})",
+                r"^(\d{8})_",
+                r"^img(\d{8})_",
+                r"^Screenshot_(\d{8})",
             ]).unwrap();
             let matches = set.matches(file_path.file_name().unwrap().to_str().unwrap());
             if matches.matched_any() == false {
