@@ -70,7 +70,12 @@ pub fn scan_date(file_path: &std::path::Path) {
             ]).unwrap();
             let matches = set.matches(file_path.file_name().unwrap().to_str().unwrap());
             if matches.matched_any() == false {
+
+                // file.metadata().unwrap().created();
                 println!("[NO EXIF] Could not find a date match for: {:?}", file_path);
+
+                let datetime: chrono::DateTime<chrono::Utc> = file.metadata().unwrap().modified().unwrap().into();
+                println!("[NO EXIF] Metadata is {:?}", datetime);
             }
         }
     }
