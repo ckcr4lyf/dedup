@@ -71,11 +71,17 @@ pub fn scan_date(file_path: &std::path::Path) {
             let matches = set.matches(file_path.file_name().unwrap().to_str().unwrap());
             if matches.matched_any() == false {
 
+                // Try and get modified
+                if let Ok(modified_time) = file.metadata().unwrap().modified() {
+                    // We are ok
+                    return;
+                } else {
+                    println!("[NO EXIF, NO MODIFIED] Could not find a date match for: {:?}", file_path);
+                }
                 // file.metadata().unwrap().created();
-                println!("[NO EXIF] Could not find a date match for: {:?}", file_path);
 
-                let datetime: chrono::DateTime<chrono::Utc> = file.metadata().unwrap().modified().unwrap().into();
-                println!("[NO EXIF] Metadata is {:?}", datetime);
+                // let datetime: chrono::DateTime<chrono::Utc> = file.metadata().unwrap().modified().unwrap().into();
+                // println!("[NO EXIF] Metadata is {:?}", datetime.to_rfc3339());
             }
         }
     }
