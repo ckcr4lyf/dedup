@@ -13,7 +13,9 @@ pub fn scan_folder(folder_name: &std::ffi::OsStr) {
             }
 
             // Otherwise just read file
-            scan_date(&std::path::Path::new(folder_name).join(p.file_name()));
+            if let Some(v) = scan_date(&std::path::Path::new(folder_name).join(p.file_name())) {
+                println!("We got {:?}", v);
+            }
         }
     }
 }
@@ -39,11 +41,13 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
         let exifreader = exif::Reader::new();
         
         if let Ok(exif) = exifreader.read_from_container(&mut bufreader) {
+            // println!("Well we got exif");
             for f in exif.fields() {
                 match f.tag {
                     exif::Tag::DateTime => {
                         // Try and match the EXIF datetime
                         let exif_tag_val = f.display_value();
+                        // println!("And we got {}", exif_tag_val);
                         let re = regex::Regex::new(r"^(\d{4})-(\d{2})-(\d{2})").unwrap();
 
                         if re.is_match(&exif_tag_val.to_string()) {
@@ -53,7 +57,7 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
                         println!("[EXIF] Could not find date match, for: {:?}", file_path);
                         return None
                     },
-                    _ => return None
+                    _ => ()
                 }
             }
 
@@ -93,6 +97,7 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
     return None;
 }
 
+#[derive(Debug)]
 pub struct ImageMetadata {
     pub path: std::ffi::OsString,
     pub date_str: String,
