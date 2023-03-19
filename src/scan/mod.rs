@@ -20,17 +20,17 @@ pub fn scan_folder(folder_name: &std::ffi::OsStr) {
 
 const VALID_EXTENSIONS: [&str; 2] = ["jpg", "png"];
 
-pub fn scan_date(file_path: &std::path::Path) {
+pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
     if let Some(ext) = file_path.extension() {
         let lcase = ext.to_ascii_lowercase();
         let l2 = lcase.to_str().unwrap();
         if VALID_EXTENSIONS.contains(&l2) == false {
             // Skip invalid extension
-            return;
+            return None;
         }
     } else {
         println!("Could not get extension for file {:?}", file_path);
-        return;
+        return None;
     }
 
     // Try and open the file
@@ -42,21 +42,22 @@ pub fn scan_date(file_path: &std::path::Path) {
             for f in exif.fields() {
                 match f.tag {
                     exif::Tag::DateTime => {
-
                         // Try and match the EXIF datetime
                         let exif_tag_val = f.display_value();
-                        let set = regex::RegexSet::new(&[
-                            r"^(\d{4})-(\d{2})-(\d{2})",
-                        ]).unwrap();
-                        let matches = set.matches(&exif_tag_val.to_string());
-                        if matches.matched_any() == false {
-                            println!("[EXIF] Could not find date match, for: {:?}", file_path);
+                        let re = regex::Regex::new(r"^(\d{4})-(\d{2})-(\d{2})").unwrap();
+
+                        if re.is_match(&exif_tag_val.to_string()) {
+                            return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: exif_tag_val.to_string() })
                         }
-                        // println!("{:?} - Found datetime as {}", file_path.file_name().unwrap(), f.display_value())
+                        
+                        println!("[EXIF] Could not find date match, for: {:?}", file_path);
+                        return None
                     },
-                    _ => ()
+                    _ => return None
                 }
             }
+
+            return None;
         } else {
             // println!("{:?} - EXIF data not found", file_path.file_name().unwrap());
 
@@ -89,5 +90,5 @@ pub fn scan_date(file_path: &std::path::Path) {
 
 struct ImageMetadata {
     path: std::ffi::OsString,
-    date_str: str,
+    date_str: String,
 }
