@@ -75,20 +75,25 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
                 // Try and get modified
                 if let Ok(modified_time) = file.metadata().unwrap().modified() {
                     // We are ok
-                    return;
+                    return None;
                 } else {
                     println!("[NO EXIF, NO MODIFIED] Could not find a date match for: {:?}", file_path);
+                    return None;
                 }
                 // file.metadata().unwrap().created();
 
                 // let datetime: chrono::DateTime<chrono::Utc> = file.metadata().unwrap().modified().unwrap().into();
                 // println!("[NO EXIF] Metadata is {:?}", datetime.to_rfc3339());
             }
+
+            return None;
         }
     }
+
+    return None;
 }
 
-struct ImageMetadata {
-    path: std::ffi::OsString,
-    date_str: String,
+pub struct ImageMetadata {
+    pub path: std::ffi::OsString,
+    pub date_str: String,
 }
