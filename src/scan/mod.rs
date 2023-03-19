@@ -86,3 +86,8 @@ pub fn scan_date(file_path: &std::path::Path) {
         }
     }
 }
+
+struct ImageMetadata {
+    path: std::ffi::OsString,
+    date_str: str,
+}
