@@ -1,4 +1,8 @@
+use log::{debug,info,error};
+
+
 pub fn scan_folder(folder_name: &std::ffi::OsStr) {
+    debug!("Going to scan folder {}", folder_name.to_str().unwrap());
     let dir_entries = std::fs::read_dir(folder_name).expect("Given path was not a folder!");
 
     for entry in dir_entries {
@@ -14,7 +18,7 @@ pub fn scan_folder(folder_name: &std::ffi::OsStr) {
 
             // Otherwise just read file
             if let Some(v) = scan_date(&std::path::Path::new(folder_name).join(p.file_name())) {
-                println!("We got {:?}", v);
+                info!("We got {:?}", v);
             }
         }
     }
@@ -31,9 +35,12 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
             return None;
         }
     } else {
-        println!("Could not get extension for file {:?}", file_path);
+        error!("Could not get extension for file {:?}", file_path);
         return None;
     }
+
+    let file_name = file_path.file_name().unwrap().to_str().unwrap();
+    // debug!("Going to scan file {}", file_path.file_name().unwrap().to_str().unwrap());
 
     // Try and open the file
     if let Ok(file) = std::fs::File::open(file_path) {
@@ -48,48 +55,67 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
                         // Try and match the EXIF datetime
                         let exif_tag_val = f.display_value();
                         // println!("And we got {}", exif_tag_val);
-                        let re = regex::Regex::new(r"^(\d{4})-(\d{2})-(\d{2})").unwrap();
-
-                        if re.is_match(&exif_tag_val.to_string()) {
-                            return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: exif_tag_val.to_string() })
+                        let exif_re = regex::Regex::new(r"^(\d{4})-(\d{2})-(\d{2})").unwrap();
+                        if let Some(cap) = exif_re.captures(&exif_tag_val.to_string()) {
+                            let dst = format!("{}-{}-{}", &cap[1], &cap[2], &cap[3]);
+                            return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
                         }
                         
-                        println!("[EXIF] Could not find date match, for: {:?}", file_path);
+                        error!("Found DateTIme EXIF tag, but couldn't find date match, for: {:?}", file_path);
                         return None
                     },
                     _ => ()
                 }
             }
 
+            error!("Could not find relevant EXIF tag for {:?}", file_path);
             return None;
         } else {
             // println!("{:?} - EXIF data not found", file_path.file_name().unwrap());
 
-            let set = regex::RegexSet::new(&[
-                r"^IMG-(\d{8})-",
-                r"^signal-(\d{4})-(\d{2})-(\d{2})",
-                r"^(\d{4})-(\d{2})-(\d{2})",
-                r"^(\d{8})_",
-                r"^img(\d{8})_",
-                r"^Screenshot_(\d{8})",
-            ]).unwrap();
-            let matches = set.matches(file_path.file_name().unwrap().to_str().unwrap());
-            if matches.matched_any() == false {
-
-                // Try and get modified
-                if let Ok(modified_time) = file.metadata().unwrap().modified() {
-                    // We are ok
-                    return None;
-                } else {
-                    println!("[NO EXIF, NO MODIFIED] Could not find a date match for: {:?}", file_path);
-                    return None;
-                }
-                // file.metadata().unwrap().created();
-
-                // let datetime: chrono::DateTime<chrono::Utc> = file.metadata().unwrap().modified().unwrap().into();
-                // println!("[NO EXIF] Metadata is {:?}", datetime.to_rfc3339());
+            // Handle names such as IMG-20180523-WA0013.jpg aka WhatsApp format
+            let whatsapp_re = regex::Regex::new(r"^IMG-(\d{8})-").unwrap();
+            if let Some(cap) = whatsapp_re.captures(file_name) {
+                let dst = format!("{}-{}-{}", &cap[1][0..4], &cap[1][4..6], &cap[1][6..8]);
+                return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
+            }
+            
+            // Handles names such as signal-2020-11-17-104012.jpg aka Signal format
+            let signal_re = regex::Regex::new(r"^signal-(\d{4})-(\d{2})-(\d{2})").unwrap();
+            if let Some(cap) = signal_re.captures(file_name) {
+                let dst = format!("{}-{}-{}", &cap[1], &cap[2], &cap[3]);
+                return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
             }
 
+            // Handles names such as YYYY-MM-DD 
+            let custom_1 = regex::Regex::new(r"^(\d{4})-(\d{2})-(\d{2})").unwrap();
+            if let Some(cap) = custom_1.captures(file_name) {
+                let dst = format!("{}-{}-{}", &cap[1], &cap[2], &cap[3]);
+                return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
+            }
+
+            // Handles names such as YYYY-MM-DD 
+            let custom_2 = regex::Regex::new(r"^(\d{8})_").unwrap();
+            if let Some(cap) = custom_2.captures(file_name) {
+                let dst = format!("{}-{}-{}", &cap[1][0..4], &cap[1][4..6], &cap[1][6..8]);
+                return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
+            }
+
+            // Handles names such as YYYYMMDD 
+            let custom_3 = regex::Regex::new(r"^img(\d{8})_").unwrap();
+            if let Some(cap) = custom_3.captures(file_name) {
+                let dst = format!("{}-{}-{}", &cap[1][0..4], &cap[1][4..6], &cap[1][6..8]);
+                return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
+            }
+
+            // Handles names such as Screenshot_YYYYMMDD 
+            let custom_4 = regex::Regex::new(r"^Screenshot_(\d{8})").unwrap();
+            if let Some(cap) = custom_4.captures(file_name) {
+                let dst = format!("{}-{}-{}", &cap[1][0..4], &cap[1][4..6], &cap[1][6..8]);
+                return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst });
+            }
+            
+            error!("Could not find any kind of match for {:?}!", file_path);
             return None;
         }
     }

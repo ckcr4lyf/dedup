@@ -18,3 +18,11 @@ If the folder name has spaces, you can use quotes. Example:
 ```
 dedup.exe "C:\Users\user\Pictures\Cool Folder Name"
 ```
+
+## Logging
+
+On Windows, set the environment variable in Powershell using:
+
+```
+$env:RUST_LOG = 'debug'
+```

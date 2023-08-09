@@ -9,7 +9,7 @@ struct Args {
 }
 
 fn main() {
-
+    env_logger::init();
     let args = Args::parse();
     scan::scan_folder(&std::ffi::OsString::from(args.target_directory));
     // let paths = std::fs::read_dir(args.target_directory).unwrap();
