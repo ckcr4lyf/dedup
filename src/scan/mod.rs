@@ -1,9 +1,9 @@
-use std::io::{Read, Seek};
+use std::{io::{Read, Seek}, collections::HashMap};
 
-use log::{debug,info,error};
+use log::{debug,info,error, warn};
 
 
-pub fn scan_folder(folder_name: &std::ffi::OsStr) {
+pub fn scan_folder(map: &mut HashMap<u128, ImageMetadata>, folder_name: &std::ffi::OsStr) {
     debug!("Going to scan folder {}", folder_name.to_str().unwrap());
     let dir_entries = std::fs::read_dir(folder_name).expect("Given path was not a folder!");
 
@@ -14,13 +14,20 @@ pub fn scan_folder(folder_name: &std::ffi::OsStr) {
             if metadata.is_dir() {
                 // println!("Found folder: {:?}", p.file_name());
                 // recursive
-                scan_folder(std::path::Path::new(folder_name).join(p.file_name()).as_os_str());
+                scan_folder(map, std::path::Path::new(folder_name).join(p.file_name()).as_os_str());
                 continue;
             }
 
             // Otherwise just read file
             if let Some(v) = scan_date(&std::path::Path::new(folder_name).join(p.file_name())) {
-                info!("We got {:?}", v);
+                // info!("We got {:?}", v);
+
+                if map.contains_key(&v.hash) {
+                    warn!("{:?} is a dupe!", v.path);
+                } else {
+                    info!("Got new image. Date: {}, Path: {:?}", v.date_str, v.path);
+                    map.insert(v.hash, v);
+                }
             }
         }
     }

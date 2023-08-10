@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
 use clap::Parser;
+use log::info;
+use scan::ImageMetadata;
 
 mod scan;
 
@@ -14,8 +16,12 @@ fn main() {
     env_logger::init();
     let args = Args::parse();
 
-    // let map = HashMap::new();
-    scan::scan_folder(&std::ffi::OsString::from(args.target_directory));
+    let mut map: HashMap<u128, ImageMetadata> = HashMap::new();
+    info!("Starting dedupe on {}...", args.target_directory);
+    scan::scan_folder(&mut map, &std::ffi::OsString::from(args.target_directory));
+
+    info!("Finished! Total {} unique images.", map.len());
+
     // let paths = std::fs::read_dir(args.target_directory).unwrap();
 
     // for path in paths {
