@@ -12,3 +12,4 @@ env_logger = "0.10.0"
 kamadak-exif = "0.5.5"
 log = "0.4.19"
 regex = "1"
+xxhash-rust = { version = "0.8.6", features = ["xxh3"] }
