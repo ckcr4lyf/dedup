@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use clap::Parser;
-use log::info;
+use log::{info, debug};
 use scan::ImageMetadata;
 
 mod scan;
@@ -19,8 +19,17 @@ fn main() {
     let mut map: HashMap<u128, ImageMetadata> = HashMap::new();
     info!("Starting dedupe on {}...", args.target_directory);
     scan::scan_folder(&mut map, &std::ffi::OsString::from(args.target_directory));
-
     info!("Finished! Total {} unique images.", map.len());
+
+    let cwd = std::env::current_dir().expect("failed to get current dir");
+
+    for (k, v) in map {
+        let dir_path = std::path::Path::new(&cwd).join(&v.date_str[0..7]);
+        debug!("Going to copy {} to {}", v.file_name, dir_path.display());
+    }
+
+
+    // std::fs::create_dir_all(dir_path).expect("failed to make dir!");
 
     // let paths = std::fs::read_dir(args.target_directory).unwrap();
 
