@@ -39,8 +39,9 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
     if let Some(ext) = file_path.extension() {
         let lcase = ext.to_ascii_lowercase();
         let l2 = lcase.to_str().unwrap();
+
+        // Skip invalid extension
         if VALID_EXTENSIONS.contains(&l2) == false {
-            // Skip invalid extension
             return None;
         }
     } else {
@@ -50,10 +51,7 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
 
     let file_name = file_path.file_name().unwrap().to_str().unwrap().to_string();
     debug!("Going to parse file {}", file_name);
-    // debug!("Going to scan file {}", file_path.file_name().unwrap().to_str().unwrap());
 
-    // let file_handle
-    // xxhash_rust::xxh3::xxh3_128(std::io::Read::read_to_end(&mut self, buf))
 
     let mut file = match std::fs::File::open(file_path) {
         Ok(file) => file,
@@ -104,9 +102,13 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
             }
         }
 
-        warn!("Could not find relevant EXIF tag for {:?}! Will attempt regex...", file_path);
+        warn!("Could not find relevant EXIF tag for {:?}!", file_path);
+    } else {
+        warn!("No valid EXIF data for {:?}!", file_path)
     }
 
+    debug!("Going to attempt to match regex filename...");
+    
     // Handle names such as IMG-20180523-WA0013.jpg aka WhatsApp format
     let whatsapp_re = regex::Regex::new(r"^IMG-(\d{8})-").unwrap();
     if let Some(cap) = whatsapp_re.captures(&file_name) {
@@ -150,7 +152,18 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
     }
     
     warn!("Could not find a Regex match for {:?}! Will fallback to Date Modified", file_path);
-    return None;
+
+    // let date_modified = metadata.modified().expect("failed to read date modified");
+    let date_modified: chrono::DateTime<chrono::Utc> = match metadata.modified() {
+        Ok(dm) => dm.into(),
+        Err(e) => {
+            error!("Failed to read Date Modified! {}", e);
+            return None;
+        }
+    };
+
+    debug!("Obtained Date Modified as {}", date_modified);
+    return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: date_modified.format("%Y-%m").to_string(), hash, file_name });
 }
 
 #[derive(Debug)]
