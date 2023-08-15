@@ -1,6 +1,6 @@
 use std::{io::{Read, Seek}, collections::HashMap};
 
-use log::{debug,info,error, warn};
+use log::{debug,info,error, warn, trace};
 
 
 pub fn scan_folder(map: &mut HashMap<u128, ImageMetadata>, folder_name: &std::ffi::OsStr) {
@@ -49,6 +49,7 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
     }
 
     let file_name = file_path.file_name().unwrap().to_str().unwrap().to_string();
+    trace!("Going to handle file {}", file_name);
     // debug!("Going to scan file {}", file_path.file_name().unwrap().to_str().unwrap());
 
     // let file_handle
@@ -75,8 +76,9 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
         if let Ok(exif) = exifreader.read_from_container(&mut bufreader) {
             // println!("Well we got exif");
             for f in exif.fields() {
+                trace!("Found EXIF tag {:04X?}", f.tag.1);
                 match f.tag {
-                    exif::Tag::DateTime => {
+                    exif::Tag::DateTime | exif::Tag::DateTimeOriginal => {
                         // Try and match the EXIF datetime
                         let exif_tag_val = f.display_value();
                         // println!("And we got {}", exif_tag_val);
@@ -86,7 +88,7 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
                             return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: dst, hash, file_name });
                         }
                         
-                        error!("Found DateTIme EXIF tag, but couldn't find date match, for: {:?}", file_path);
+                        error!("Found DateTime EXIF tag, but couldn't find date match, for: {:?}", file_path);
                         return None
                     },
                     _ => ()
