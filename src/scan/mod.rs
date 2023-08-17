@@ -151,7 +151,8 @@ pub fn scan_date(file_path: &std::path::Path) -> Option<ImageMetadata> {
         return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: Some(dst), hash, file_name });
     }
     
-    warn!("Could not find a Regex match for {:?}! Will fallback to Date Modified", file_path);
+    warn!("Could not find a Regex match for {:?}! Will treat as NO_EXIF", file_path);
+    return Some(ImageMetadata { path: file_path.as_os_str().to_os_string(), date_str: None, hash, file_name });
 
     // let date_modified = metadata.modified().expect("failed to read date modified");
     let date_modified: chrono::DateTime<chrono::Utc> = match metadata.modified() {
