@@ -13,6 +13,7 @@ struct Args {
 }
 
 const NO_EXIF: &'static str = "NO_EXIF";
+const DUPLICATES: &'static str = "DUPLICATES";
 
 fn main() {
     env_logger::init();
@@ -40,7 +41,8 @@ fn main() {
         }
 
         for i in 1..v.len() {
-            // debug!("Going to copy {} to {}", v.file_name, dir_path.display());
+            let dir_path = std::path::Path::new(&cwd).join(DUPLICATES);
+            debug!("Going to copy {} to {}", v[i].file_name, dir_path.display());
         }
 
     }
