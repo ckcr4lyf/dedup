@@ -20,13 +20,16 @@ pub fn scan_folder(map: &mut HashMap<u128, Vec<ImageMetadata>>, folder_name: &st
 
             // Otherwise just read file
             if let Some(v) = scan_date(&std::path::Path::new(folder_name).join(p.file_name())) {
-                // info!("We got {:?}", v);
-
-                if map.contains_key(&v.hash) {
-                    warn!("{:?} is a dupe!", v.path);
-                } else {
-                    info!("Got new image. Date: {:#?}, Path: {:?}", v.date_str, v.path);
-                    map.insert(v.hash, vec![v]);
+                match map.get_mut(&v.hash) {
+                    Some(existing) => {
+                        warn!("{:?} is a dupe of {:?}!", v.path, existing[0].file_name);
+                        existing.push(v);
+                    },
+                    None => {
+                        info!("Got new image. Date: {:#?}, Path: {:?}", v.date_str, v.path);
+                        let new_vec = vec![v];
+                        map.insert(new_vec[0].hash, new_vec);
+                    }
                 }
             }
         }
