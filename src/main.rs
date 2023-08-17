@@ -12,11 +12,13 @@ struct Args {
    target_directory: String,
 }
 
+const NO_EXIF: &'static str = "NO_EXIF";
+
 fn main() {
     env_logger::init();
     let args = Args::parse();
 
-    let mut map: HashMap<u128, ImageMetadata> = HashMap::new();
+    let mut map: HashMap<u128, Vec<ImageMetadata>> = HashMap::new();
     info!("Starting dedupe on {}...", args.target_directory);
     scan::scan_folder(&mut map, &std::ffi::OsString::from(args.target_directory));
     info!("Finished! Total {} unique images.", map.len());
@@ -24,8 +26,23 @@ fn main() {
     let cwd = std::env::current_dir().expect("failed to get current dir");
 
     for (k, v) in map {
-        let dir_path = std::path::Path::new(&cwd).join(&v.date_str[0..7]);
-        debug!("Going to copy {} to {}", v.file_name, dir_path.display());
+        // let original = &v[0];
+
+        match &v[0].date_str {
+            Some(date_str) => {
+                let dir_path = std::path::Path::new(&cwd).join(&date_str[0..7]);
+                debug!("Going to copy {} to {}", v[0].file_name, dir_path.display());
+            },
+            None => {
+                let dir_path = std::path::Path::new(&cwd).join(NO_EXIF);
+                debug!("Going to copy {} to {}", v[0].file_name, dir_path.display());
+            }
+        }
+
+        for i in 1..v.len() {
+            // debug!("Going to copy {} to {}", v.file_name, dir_path.display());
+        }
+
     }
 
 

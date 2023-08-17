@@ -3,7 +3,7 @@ use std::{io::{Read, Seek}, collections::HashMap};
 use log::{debug,info,error, warn, trace};
 
 
-pub fn scan_folder(map: &mut HashMap<u128, ImageMetadata>, folder_name: &std::ffi::OsStr) {
+pub fn scan_folder(map: &mut HashMap<u128, Vec<ImageMetadata>>, folder_name: &std::ffi::OsStr) {
     debug!("Going to scan folder {}", folder_name.to_str().unwrap());
     let dir_entries = std::fs::read_dir(folder_name).expect("Given path was not a folder!");
 
@@ -26,7 +26,7 @@ pub fn scan_folder(map: &mut HashMap<u128, ImageMetadata>, folder_name: &std::ff
                     warn!("{:?} is a dupe!", v.path);
                 } else {
                     info!("Got new image. Date: {:#?}, Path: {:?}", v.date_str, v.path);
-                    map.insert(v.hash, v);
+                    map.insert(v.hash, vec![v]);
                 }
             }
         }
