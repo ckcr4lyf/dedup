@@ -26,7 +26,7 @@ pub fn scan_folder(map: &mut HashMap<u128, Vec<ImageMetadata>>, folder_name: &st
                         existing.push(v);
                     },
                     None => {
-                        info!("Got new image. Date: {:#?}, Path: {:?}", v.date_str, v.path);
+                        info!("Got new image. Path: {:?}", v.path);
                         let new_vec = vec![v];
                         map.insert(new_vec[0].hash, new_vec);
                     }

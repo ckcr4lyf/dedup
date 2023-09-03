@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, path::PathBuf};
 
 use clap::Parser;
-use log::{info, debug};
+use log::{info, debug, error};
 use scan::ImageMetadata;
 
 mod scan;
@@ -33,16 +33,19 @@ fn main() {
             Some(date_str) => {
                 let dir_path = std::path::Path::new(&cwd).join(&date_str[0..7]);
                 debug!("Going to copy {} to {}", v[0].file_name, dir_path.display());
+                do_copy(&v[0], &dir_path)
             },
             None => {
                 let dir_path = std::path::Path::new(&cwd).join(NO_EXIF);
                 debug!("Going to copy {} to {}", v[0].file_name, dir_path.display());
+                do_copy(&v[0], &dir_path)
             }
         }
 
         for i in 1..v.len() {
             let dir_path = std::path::Path::new(&cwd).join(DUPLICATES);
             debug!("Going to copy {} to {}", v[i].file_name, dir_path.display());
+            do_copy(&v[0], &dir_path)
         }
 
     }
@@ -76,4 +79,14 @@ fn main() {
     //         }
     //     }
     // }
+}
+
+fn do_copy(img: &ImageMetadata, dst: &PathBuf) {
+    std::fs::create_dir_all(dst).expect("failed to make dir!");
+    match std::fs::copy(img.path.as_os_str(), dst) {
+        Ok(_) => (),
+        Err(e) => {
+            error!("Failed to copy! {}", e);
+        }
+    }
 }
