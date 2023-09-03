@@ -83,7 +83,7 @@ fn main() {
 
 fn do_copy(img: &ImageMetadata, dst: &PathBuf) {
     std::fs::create_dir_all(dst).expect("failed to make dir!");
-    match std::fs::copy(img.path.as_os_str(), dst) {
+    match std::fs::copy(img.path.as_os_str(), std::path::Path::new(dst).join(&img.file_name)) {
         Ok(_) => (),
         Err(e) => {
             error!("Failed to copy! {}", e);
